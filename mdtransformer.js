@@ -1,5 +1,7 @@
 'use strict';
 
+const { program } = require('commander');
+
 const tags = [
   { pattern: /(?:^|\n\n)(.*?)(?=\n\n|$)/gs, replacement: '\n<p>\n$1\n</p>\n' },
   { pattern: /\n```(?:\n)?(.*?)(?:\n)?```\n/gs,
@@ -27,3 +29,10 @@ This is a block of code
 \`\`\`
 
 This is a new paragraph.`;
+
+program.command('parse')
+  .description('parse markdown file')
+  .action(() => {
+    parseMarkdown(exampleText);
+  });
+program.parse();
