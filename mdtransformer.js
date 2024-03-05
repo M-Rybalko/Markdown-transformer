@@ -2,31 +2,27 @@
 
 const { program } = require('commander');
 const validator = require('./mdvalidator');
+const fs = require('node:fs');
+const { dirname } = require('path');
 
-const exampleText = `This is some text with **bold**, _ita_lic_, and \`code\`
-formatting. \`formatting\` 
-\`\`\`
-This is a block of code **He He**
-\`\`\`
-This is a new paragraph.`;
-
+const options = program.opts();
 const preformatted = [];
 const tags = [
-  { pattern: /(?<![a-zA-Z0-9])\*\*(?! )(.*?)(?<! )\*\*(?![a-zA-Z0-9])/g,
+  { pattern: /(?<=[ ,.:;\n\t]|^)\*\*(?=\S)(.+?)(?<=\S)\*\*(?=[ ,.:;\n\t]|$)/g,
     replacement: '<b>$1</b>',
   },
   {
-    pattern: /(?<![a-zA-Z0-9])_(?! )(.*?)(?<! )_(?![a-zA-Z0-9])/g,
+    pattern: /(?<=[ ,.:;\n\t]|^)_(?=\S)(.+?)(?<=\S)_(?=[ ,.:;\n\t]|$)/g,
     replacement: '<i>$1</i>',
   },
   {
-    pattern: /(?<![a-zA-Z0-9{`])[`](?! )(.*?)(?<! )[`](?![a-zA-Z0-9}`])/g,
+    pattern: /(?<=[ ,.:;\n\t]|^)`(?=\S)(.+?)(?=\S)`(?=[ ,.:;\n\t]|$)/g,
     replacement: '<tt>$1</tt>',
   },
 ];
 
 const getParagraphs = (text) => text.split('\n\n').reduce((acc, cur) =>
-  `${acc}\n<p>${cur}</p>`, ''
+  `${acc}<p>${cur}</p>\n`, ''
 );
 
 const separatePreformatted = (text) => {
@@ -50,6 +46,19 @@ const setPreformatted = (text) => {
   return text;
 };
 
+const readFile = () => {
+  const isExists = fs.existsSync(program.args[0]);
+  if (!isExists) throw new Error('file not found');
+  return fs.readFileSync(program.args[0], 'utf-8');
+};
+
+const writeToHtml = (text) => {
+  const path = dirname(options.out);
+  const isExists = fs.existsSync(path);
+  if (!isExists) throw new Error('out is not correct');
+  fs.writeFileSync(options.out, text);
+};
+
 const parseMarkdown = (text) => {
   validator.validateNesting(text, tags);
   let newText = getParagraphs(text);
@@ -58,12 +67,14 @@ const parseMarkdown = (text) => {
   }
   validator.validateUnclosed(newText);
   newText = setPreformatted(newText);
-  console.log(newText);
+  options.out ? writeToHtml(newText) : console.log(newText);
 };
 
-program.command('parse')
-  .description('parse markdown file')
+program.name('MD to HTML transformer')
+  .description('Transforms a MD file to HTML')
+  .argument('<path>', 'path to markdown file')
+  .option('-o, --out <path>', 'path to html file')
   .action(() => {
-    parseMarkdown(separatePreformatted(exampleText));
+    parseMarkdown(separatePreformatted(readFile(program.args[0])));
   });
 program.parse();
