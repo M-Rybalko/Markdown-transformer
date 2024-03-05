@@ -55,4 +55,4 @@ The result we will get is:
 
 ## Revert commit
 
-[Revert commit link]([https://link-url-here.org](https://github.com/M-Rybalko/Markdown-transformer/commit/3667adadc58254f946613d69cb063f877d79b5c2)https://github.com/M-Rybalko/Markdown-transformer/commit/3667adadc58254f946613d69cb063f877d79b5c2)
+[Revert commit link](https://github.com/M-Rybalko/Markdown-transformer/commit/3667adadc58254f946613d69cb063f877d79b5c2)
