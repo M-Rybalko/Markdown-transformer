@@ -2,6 +2,15 @@
 
 const { program } = require('commander');
 
+
+const exampleText = `This is some text with **bo**ld**, _ita_lic_, and \`code\`
+formatting. \`\`\`formatting\`\`\` 
+\`\`\`
+This is a block of code **He He**
+\`\`\`
+
+This is a new paragraph.`;
+
 const preformatted = [];
 const tags = [
   {
@@ -27,7 +36,7 @@ const tags = [
 
 const separatePreformatted = (text) => {
   const preformattedText = text.match(
-    /(?:^|\n)```(?:\n)?(.*?)(?:\n)?```(?=\n|$)/gs
+    /(?:^|\n)```(?:\n)?(.*?)(?:\n)?```(?:\n|$)/gs
   );
   if (!preformattedText) return text;
 
@@ -39,9 +48,8 @@ const separatePreformatted = (text) => {
 };
 
 const setPreformatted = (text) => {
-  console.log(preformatted);
   for (const pre of preformatted) {
-    const newPre = `\n<pre>${pre.replace(/```\n/g, '')}</pre>\n`;
+    const newPre = `<pre>${pre.replace(/(?:\n)```/g, '')}</pre>`;
     text = text.replace(`PRE{{${preformatted.indexOf(pre)}}}PRE`, newPre);
   }
   return text;
@@ -55,14 +63,6 @@ const parseMarkdown = (text) => {
   newText = setPreformatted(newText);
   console.log(newText);
 };
-
-const exampleText = `This is some text with **bo**ld**, _ita_lic_, and \`code\`
-formatting. \`\`\`formatting\`\`\` 
-\`\`\`
-This is a block of code **He He**
-\`\`\`
-
-This is a new paragraph.`;
 
 program.command('parse')
   .description('parse markdown file')
