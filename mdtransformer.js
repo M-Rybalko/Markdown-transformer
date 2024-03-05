@@ -1,38 +1,33 @@
 'use strict';
 
 const { program } = require('commander');
+const validator = require('./mdvalidator');
 
-
-const exampleText = `This is some text with **bo**ld**, _ita_lic_, and \`code\`
-formatting. \`\`\`formatting\`\`\` 
+const exampleText = `This is some text with **bold**, _ita_lic_, and \`code\`
+formatting. \`formatting\` 
 \`\`\`
 This is a block of code **He He**
 \`\`\`
-
 This is a new paragraph.`;
 
 const preformatted = [];
 const tags = [
-  {
-    pattern: /(?:^|\n\n)(.*?)(?=\n\n|$)/gs,
-    replacement: '<p>\n$1\n</p>\n',
-  },
-  { pattern: /(?<![a-zA-Z0-9])\*\*(.*?)\*\*(?![a-zA-Z0-9])/g,
+  { pattern: /(?<![a-zA-Z0-9])\*\*(?! )(.*?)(?<! )\*\*(?![a-zA-Z0-9])/g,
     replacement: '<b>$1</b>',
   },
   {
-    pattern: /(?<![a-zA-Z0-9])_(.*?)_(?![a-zA-Z0-9])/g,
+    pattern: /(?<![a-zA-Z0-9])_(?! )(.*?)(?<! )_(?![a-zA-Z0-9])/g,
     replacement: '<i>$1</i>',
   },
   {
-    pattern: /(?<![a-zA-Z0-9{`])[`](.*?)[`](?![a-zA-Z0-9}`])/g,
+    pattern: /(?<![a-zA-Z0-9{`])[`](?! )(.*?)(?<! )[`](?![a-zA-Z0-9}`])/g,
     replacement: '<tt>$1</tt>',
   },
-  {
-    pattern: /\n```(?:\n)?(.*?)(?:\n)?```\n/gs,
-    replacement: '\n<pre>$1</pre>\n',
-  },
 ];
+
+const getParagraphs = (text) => text.split('\n\n').reduce((acc, cur) =>
+  `${acc}\n<p>${cur}</p>`, ''
+);
 
 const separatePreformatted = (text) => {
   const preformattedText = text.match(
@@ -56,10 +51,12 @@ const setPreformatted = (text) => {
 };
 
 const parseMarkdown = (text) => {
-  let newText = text;
+  validator.validateNesting(text, tags);
+  let newText = getParagraphs(text);
   for (const tag of tags) {
     newText = newText.replace(tag.pattern, tag.replacement);
   }
+  validator.validateUnclosed(newText);
   newText = setPreformatted(newText);
   console.log(newText);
 };
